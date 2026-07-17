@@ -4,14 +4,16 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onApp
   const [key, setKey] = useState(settings.key);
   const [model, setModel] = useState(settings.model);
   const [lang, setLang] = useState(settings.lang);
+  const [mode, setMode] = useState(settings.mode || 'companion');
 
   const [personaDesc, setPersonaDesc] = useState('');
   const [personaFile, setPersonaFile] = useState(null);
+  const [personaPreview, setPersonaPreview] = useState('');
 
   if (!isOpen) return null;
 
   const handleSave = () => {
-    onSave({ key: key.trim(), model, lang });
+    onSave({ key: key.trim(), model, lang, mode });
   };
 
   const handleApplyPersona = () => {
@@ -22,6 +24,13 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onApp
     onApplyPersona(null, '');
     setPersonaDesc('');
     setPersonaFile(null);
+    setPersonaPreview('');
+  };
+
+  const handlePersonaFileChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setPersonaFile(file);
+    setPersonaPreview(file ? URL.createObjectURL(file) : '');
   };
 
   return (
@@ -52,6 +61,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onApp
         <div className="fsec">
           <label className="flabel" htmlFor="model-sel">🤖 AI Model</label>
           <select className="finput" id="model-sel" value={model} onChange={(e) => setModel(e.target.value)}>
+            <option value="llama-3.2-11b-vision-preview">Llama 3.2 Vision 11B</option>
             <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
             <option value="llama-3.1-8b-instant">Llama 3.1 8B</option>
             <option value="gemma2-9b-it">Gemma 2 9B</option>
@@ -67,9 +77,16 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onApp
               id="persona-file" 
               accept="image/png, image/jpeg, image/webp" 
               style={{ display: 'none' }}
-              onChange={(e) => setPersonaFile(e.target.files[0])}
+              onChange={handlePersonaFileChange}
             />
           </div>
+          {personaPreview && (
+            <div className="persona-preview-wrap">
+              <div className="persona-preview-card">
+                <img src={personaPreview} alt="Selected persona preview" className="persona-preview-img" />
+              </div>
+            </div>
+          )}
           {personaFile && <p style={{ fontSize: '12px', color: 'var(--teal-300)', marginTop: '4px' }}>Selected: {personaFile.name}</p>}
           <input 
             type="text" 
@@ -84,6 +101,15 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onApp
             <button className="btn btn-g" id="reset-persona" style={{ flex: 0.6 }} onClick={handleResetPersona}>↺ Reset</button>
             <button className="btn btn-p" id="apply-persona" onClick={handleApplyPersona}>✨ Apply Persona</button>
           </div>
+        </div>
+
+        <div className="fsec">
+          <label className="flabel" htmlFor="mode-sel">🧠 Expert Mode</label>
+          <select className="finput" id="mode-sel" value={mode} onChange={(e) => setMode(e.target.value)}>
+            <option value="companion">Warm Companion</option>
+            <option value="analyst">Stock Analyst</option>
+            <option value="teacher">Teacher</option>
+          </select>
         </div>
 
         <div className="fsec">

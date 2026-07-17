@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from 'next/image';
 
 export default function Sidebar({
   persona,
@@ -9,11 +8,10 @@ export default function Sidebar({
   toggleTts,
   isSpeaking,
   languageBadge,
+  modeLabel,
   onOpenSettings,
   onClearChat
 }) {
-  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 720;
-  
   return (
     <aside className="sidebar" id="sidebar">
       <div className="brand">
@@ -30,18 +28,19 @@ export default function Sidebar({
       </div>
       
       <div className="av-wrap">
-        <div className={`av-ring ${isSpeaking ? 'speaking-ring' : ''}`}>
+        <div className={`av-ring ${isSpeaking ? 'speaking-ring' : ''}`} data-mode={modeLabel?.toLowerCase()}>
           <div className="av-inner">
-            <Image
-              className={`av-img ${isSpeaking ? 'talking' : ''}`}
-              id="av-img"
-              src={persona.av}
-              alt={persona.name}
-              width={210}
-              height={255}
-              priority
-              unoptimized
-            />
+            <div className="av-scene">
+              <img
+                className={`av-img ${isSpeaking ? 'talking' : ''}`}
+                id="av-img"
+                src={persona.av}
+                alt={persona.name}
+                width={210}
+                height={255}
+              />
+              <div className="av-flare" aria-hidden="true"></div>
+            </div>
             <div className="av-fb" id="av-fb">🌸</div>
           </div>
         </div>
@@ -50,6 +49,7 @@ export default function Sidebar({
       
       <div className="p-name">{persona.name}</div>
       <div className="p-tag">{persona.tag}</div>
+      <span className="l-badge">{modeLabel}</span>
       <span className="l-badge">{languageBadge}</span>
       
       <div className="divider"></div>

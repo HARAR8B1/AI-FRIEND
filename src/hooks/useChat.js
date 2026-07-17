@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 
 const API_BASE = 'https://api.groq.com/openai/v1';
 const MAX_HIST = 40;
-const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
+const DEFAULT_MODEL = 'llama-3.2-11b-vision-preview';
 
 export function useChat(settings, buildPrompt) {
   const [messages, setMessages] = useState([]);
@@ -23,22 +23,47 @@ export function useChat(settings, buildPrompt) {
     return newMsg;
   };
 
-  const send = async (text, onAIResponseComplete) => {
-    if (!text || isBusy) return;
+  const send = async (text, onAIResponseComplete, attachments = []) => {
+    const trimmedText = text?.trim() || '';
+    const fallbackText = attachments.length ? 'Please analyze the uploaded image or document.' : '';
+    const userText = trimmedText || fallbackText;
+
+    if (!userText || isBusy) return;
     if (!settings.key) {
       setError({ type: 'NO_KEY' });
       return;
     }
 
-    addMsg('user', text);
+    addMsg('user', userText);
     setIsBusy(true);
     setIsTyping(true);
     setError(null);
 
-    histRef.current.push({ role: 'user', content: text });
+    histRef.current.push({ role: 'user', content: userText });
     if (histRef.current.length > MAX_HIST) histRef.current = histRef.current.slice(-MAX_HIST);
 
     try {
+      const hasVisionModel = /vision/i.test(settings.model || DEFAULT_MODEL);
+      const documentText = attachments
+        .filter(item => item?.kind === 'document' && item?.text)
+        .map(item => `Document: ${item.fileName}\n${item.text.slice(0, 2800)}`)
+        .join('\n\n');
+
+      const basePrompt = [userText, documentText].filter(Boolean).join('\n\n');
+      const visionBlocks = attachments
+        .filter(item => item?.kind === 'image' && item?.dataUrl)
+        .map(item => ({ type: 'image_url', image_url: { url: item.dataUrl } }));
+
+      const requestMessages = [
+        { role: 'system', content: buildPrompt() },
+        {
+          role: 'user',
+          content: hasVisionModel
+            ? [{ type: 'text', text: basePrompt }, ...visionBlocks]
+            : basePrompt,
+        },
+      ];
+
       const res = await fetch(`${API_BASE}/chat/completions`, {
         method: 'POST',
         headers: {
@@ -47,7 +72,7 @@ export function useChat(settings, buildPrompt) {
         },
         body: JSON.stringify({
           model: settings.model || DEFAULT_MODEL,
-          messages: [{ role: 'system', content: buildPrompt() }, ...histRef.current],
+          messages: requestMessages,
           temperature: 0.85,
           stream: true,
         }),

@@ -48,6 +48,7 @@ export default function Home() {
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [attachments, setAttachments] = useState([]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
@@ -100,7 +101,7 @@ Format: Warm flowing paragraphs. Short numbered lists (max 4) for techniques. Co
       if (ttsEnabled && fullAiText) {
         speakText(fullAiText, LANGS[settings.lang]?.voice);
       }
-    });
+    }, attachments);
   };
 
   const toggleTheme = () => {
@@ -244,6 +245,8 @@ Format: Warm flowing paragraphs. Short numbered lists (max 4) for techniques. Co
             isBusy={isBusy} 
             onSend={handleSend} 
             languageCode={LANGS[settings.lang]?.voice}
+            attachments={attachments}
+            setAttachments={setAttachments}
           />
 
           <footer className="safety-bar">

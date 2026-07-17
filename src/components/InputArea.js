@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-export default function InputArea({ isBusy, onSend, languageCode }) {
+export default function InputArea({ isBusy, onSend, languageCode, attachments = [], setAttachments = () => {} }) {
   const [text, setText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const recogRef = useRef(null);
   const textAreaRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SR) {
       recogRef.current = new SR();
@@ -48,9 +51,11 @@ export default function InputArea({ isBusy, onSend, languageCode }) {
   };
 
   const handleSend = () => {
-    if (!text.trim() || isBusy) return;
+    if (!text.trim() && !attachments.length) return;
+    if (isBusy) return;
     onSend(text.trim());
     setText('');
+    setAttachments([]);
     if (textAreaRef.current) textAreaRef.current.style.height = 'auto';
   };
 
@@ -69,6 +74,13 @@ export default function InputArea({ isBusy, onSend, languageCode }) {
     }
   };
 
+  const handleFiles = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setAttachments(prev => [...prev, ...files]);
+    e.target.value = '';
+  };
+
   return (
     <div className="input-area">
       <div className="input-wrap">
@@ -85,6 +97,17 @@ export default function InputArea({ isBusy, onSend, languageCode }) {
           disabled={isBusy}
         />
         <div className="inp-btns">
+          <label className="act-btn attach-btn" title="Attach image or document" aria-label="Attach image or document">
+            📎
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,.pdf,.txt,.md,.csv,.json,.doc,.docx"
+              multiple
+              onChange={handleFiles}
+              style={{ display: 'none' }}
+            />
+          </label>
           <button 
             className={`act-btn ${isRecording ? 'rec' : ''}`} 
             id="vbtn" 
@@ -100,7 +123,7 @@ export default function InputArea({ isBusy, onSend, languageCode }) {
             id="sbtn" 
             title="Send"
             onClick={handleSend}
-            disabled={isBusy || !text.trim()}
+            disabled={isBusy || (!text.trim() && !attachments.length)}
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
@@ -108,6 +131,16 @@ export default function InputArea({ isBusy, onSend, languageCode }) {
           </button>
         </div>
       </div>
+      {attachments.length > 0 && (
+        <div className="attachment-strip">
+          {attachments.map((file, index) => (
+            <span className="attachment-pill" key={`${file.name}-${index}`}>
+              {file.name}
+              <button type="button" className="attachment-remove" onClick={() => setAttachments(prev => prev.filter((_, i) => i !== index))}>×</button>
+            </span>
+          ))}
+        </div>
+      )}
       <div className="inp-meta"><span id="ccount">{text.length}/2000</span></div>
     </div>
   );

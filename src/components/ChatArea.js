@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import Image from 'next/image';
 
 function formatTime(date) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -32,7 +31,7 @@ export default function ChatArea({ messages, isTyping, persona }) {
           <div key={m.id} className={`msg ${isU ? 'msg-u' : 'msg-a'}`}>
             {!isU && (
               <div className="m-av">
-                <Image src={persona.av} alt={persona.name} width={30} height={30} unoptimized />
+                <img src={persona.av} alt={persona.name} width={30} height={30} />
               </div>
             )}
             <div 
@@ -46,7 +45,7 @@ export default function ChatArea({ messages, isTyping, persona }) {
 
       {isTyping && (
         <div className="msg msg-a" id="typing">
-          <div className="m-av"><Image src={persona.av} alt={persona.name} width={30} height={30} unoptimized /></div>
+          <div className="m-av"><img src={persona.av} alt={persona.name} width={30} height={30} /></div>
           <div className="bubble typing-bub">
             <span className="dot"></span><span className="dot"></span><span className="dot"></span>
           </div>

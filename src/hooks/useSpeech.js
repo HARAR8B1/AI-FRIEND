@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-const fw = ['female','woman','girl','zira','heera','priya','divya','nila','samantha','victoria','karen','moira','fiona','allison','ava','susan','alice'];
+const fw = ['female','woman','girl','zira','heera','priya','divya','nila','samantha','victoria','karen','moira','fiona','allison','ava','susan','alice','susan','rachel','amanda','jenny','meera','ananya'];
 
 export function useSpeech(ttsEnabled) {
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -20,10 +20,20 @@ export function useSpeech(ttsEnabled) {
 
   const _pickFemaleVoice = (voices, lang) => {
     const lb = (lang || 'en-IN').split('-')[0].toLowerCase();
+    const preferredVoiceNames = {
+      ta: ['priya', 'samantha', 'meera', 'ananya', 'tara'],
+      en: ['samantha', 'susan', 'karen', 'fiona', 'victoria', 'allison'],
+      hi: ['heera', 'zira', 'priya', 'karen', 'samantha']
+    };
+
+    const list = preferredVoiceNames[lb] || preferredVoiceNames.en;
     return (
+      voices.find(v => v.lang.toLowerCase().startsWith(lb) && list.some(k => v.name.toLowerCase().includes(k))) ||
       voices.find(v => v.lang.toLowerCase().startsWith(lb) && fw.some(k => v.name.toLowerCase().includes(k))) ||
       voices.find(v => v.lang.toLowerCase().startsWith(lb)) ||
+      voices.find(v => v.lang === 'en-IN' && list.some(k => v.name.toLowerCase().includes(k))) ||
       voices.find(v => v.lang === 'en-IN' && fw.some(k => v.name.toLowerCase().includes(k))) ||
+      voices.find(v => list.some(k => v.name.toLowerCase().includes(k))) ||
       voices.find(v => fw.some(k => v.name.toLowerCase().includes(k))) ||
       voices.find(v => v.lang.toLowerCase().startsWith('en')) ||
       voices[0] ||
@@ -45,8 +55,8 @@ export function useSpeech(ttsEnabled) {
     _ensureVoices(voices => {
       const u = new SpeechSynthesisUtterance(clean);
       u.lang = voiceLang || 'en-IN';
-      u.rate = 0.88;
-      u.pitch = 1.18;
+      u.rate = voiceLang?.startsWith('ta') ? 0.82 : 0.88;
+      u.pitch = voiceLang?.startsWith('ta') ? 1.14 : 1.18;
       u.volume = 1.0;
       u.voice = _pickFemaleVoice(voices, u.lang);
 
