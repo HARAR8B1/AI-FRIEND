@@ -19,6 +19,12 @@
 
 # production
 /build
+/dist/
+*.apk
+
+# Android build artifacts
+android/**/build/
+android/.gradle/
 
 # misc
 .DS_Store
